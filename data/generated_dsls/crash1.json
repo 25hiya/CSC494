@@ -1,0 +1,100 @@
+{
+    "environment": {
+        "weather": null,
+        "lighting": "night",
+        "road_condition": "asphalt",
+        "grade": -5.7,
+        "speed_limit": 35,
+        "additional_properties": {}
+    },
+    "actors": [
+        {
+            "id": 1,
+            "type": "passenger_car",
+            "mass_class": "medium",
+            "strength": "medium",
+            "state": {
+                "position": "behind",
+                "speed": 35,
+                "location": {
+                    "laneID": 3,
+                    "lateral_position": null
+                },
+                "maneuver": {
+                    "for_vehicles": "travelling",
+                    "for_pedestrians": null
+                }
+            }
+        },
+        {
+            "id": 2,
+            "type": "passenger_car",
+            "mass_class": "light",
+            "strength": "low",
+            "state": {
+                "position": "stopped",
+                "speed": 0,
+                "location": {
+                    "laneID": 1,
+                    "lateral_position": null
+                },
+                "maneuver": {
+                    "for_vehicles": "at_rest",
+                    "for_pedestrians": null
+                }
+            }
+        },
+        {
+            "id": 3,
+            "type": "passenger_car",
+            "mass_class": "heavy",
+            "strength": "high",
+            "state": {
+                "position": "stopped",
+                "speed": 0,
+                "location": {
+                    "laneID": 1,
+                    "lateral_position": null
+                },
+                "maneuver": {
+                    "for_vehicles": "at_rest",
+                    "for_pedestrians": null
+                }
+            }
+        }
+    ],
+    "road_network": {
+        "road_type": "asphalt",
+        "lanes": {
+            "lane1": {
+                "id": 1,
+                "direction": "west",
+                "type": "all_directions"
+            },
+            "lane2": {
+                "id": 2,
+                "direction": "east",
+                "type": "all_directions"
+            },
+            "lane3": {
+                "id": 3,
+                "direction": "west",
+                "type": "all_directions"
+            }
+        },
+        "road_surface": "smooth",
+        "traffic_controls": [
+            "lane divider"
+        ],
+        "additional_properties": {}
+    },
+    "events": [
+        {
+            "description": "Vehicle 1 contacted the back of Vehicle 2, pushing it into Vehicle 3.",
+            "timestamp": null
+        }
+    ],
+    "metadata": {
+        "last_updated": "2026-02-16T16:02:58.402795"
+    }
+}
