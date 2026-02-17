@@ -14,16 +14,13 @@
             "mass_class": "medium",
             "strength": "medium",
             "state": {
-                "position": "behind",
-                "speed": 35,
+                "speed": null,
                 "location": {
-                    "laneID": 3,
-                    "lateral_position": null
-                },
-                "maneuver": {
-                    "for_vehicles": "travelling",
-                    "for_pedestrians": null
+                    "laneID": 3
                 }
+            },
+            "maneuver": {
+                "for_vehicles": "travelling"
             }
         },
         {
@@ -32,16 +29,16 @@
             "mass_class": "light",
             "strength": "low",
             "state": {
-                "position": "stopped",
-                "speed": 0,
-                "location": {
-                    "laneID": 1,
-                    "lateral_position": null
+                "speed": {
+                    "numerical": 0,
+                    "qualitative": "at rest"
                 },
-                "maneuver": {
-                    "for_vehicles": "at_rest",
-                    "for_pedestrians": null
+                "location": {
+                    "laneID": 1
                 }
+            },
+            "maneuver": {
+                "for_vehicles": "at_rest"
             }
         },
         {
@@ -50,16 +47,16 @@
             "mass_class": "heavy",
             "strength": "high",
             "state": {
-                "position": "stopped",
-                "speed": 0,
-                "location": {
-                    "laneID": 1,
-                    "lateral_position": null
+                "speed": {
+                    "numerical": 0,
+                    "qualitative": "at rest"
                 },
-                "maneuver": {
-                    "for_vehicles": "at_rest",
-                    "for_pedestrians": null
+                "location": {
+                    "laneID": 1
                 }
+            },
+            "maneuver": {
+                "for_vehicles": "at_rest"
             }
         }
     ],
@@ -68,12 +65,12 @@
         "lanes": {
             "lane1": {
                 "id": 1,
-                "direction": "west",
+                "direction": "east",
                 "type": "all_directions"
             },
             "lane2": {
                 "id": 2,
-                "direction": "east",
+                "direction": "west",
                 "type": "all_directions"
             },
             "lane3": {
@@ -90,11 +87,27 @@
     },
     "events": [
         {
-            "description": "Vehicle 1 contacted the back of Vehicle 2, pushing it into Vehicle 3.",
-            "timestamp": null
+            "trigger": {
+                "actor": 1,
+                "action": "contacted",
+                "second_actor": 2,
+                "chain_reaction": [
+                    {
+                        "event": {
+                            "actor": 2,
+                            "actor_2": 3,
+                            "collision_type": "rear_end",
+                            "result": {
+                                "vehicle_2": "pushed forward",
+                                "vehicle_3": "at rest"
+                            }
+                        }
+                    }
+                ]
+            }
         }
     ],
     "metadata": {
-        "last_updated": "2026-02-16T16:02:58.402795"
+        "last_updated": "2026-02-16T23:56:33.253956"
     }
 }

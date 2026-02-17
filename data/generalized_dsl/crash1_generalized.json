@@ -1,0 +1,125 @@
+{
+  "environment": {
+    "weather": [
+      "sunny",
+      "cloudy",
+      "rainy"
+    ],
+    "lighting": [
+      "daytime",
+      "night"
+    ],
+    "road_condition": [
+      "asphalt",
+      "concrete",
+      "dirt"
+    ],
+    "grade": "number",
+    "speed_limit": "number",
+    "additional_properties": {}
+  },
+  "actors": [
+    {
+      "id": "integer",
+      "type": [
+        "passenger_car",
+        "truck",
+        "motorcycle"
+      ],
+      "mass_class": [
+        "light",
+        "medium",
+        "heavy"
+      ],
+      "strength": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "state": {
+        "speed": {
+          "numerical": "number",
+          "qualitative": [
+            "at rest",
+            "travelling"
+          ]
+        },
+        "location": {
+          "laneID": "integer"
+        }
+      },
+      "maneuver": {
+        "for_vehicles": [
+          "travelling",
+          "at_rest"
+        ]
+      }
+    }
+  ],
+  "road_network": {
+    "road_type": [
+      "asphalt",
+      "concrete",
+      "dirt"
+    ],
+    "lanes": {
+      "lane1": {
+        "id": "integer",
+        "direction": [
+          "east",
+          "west",
+          "north",
+          "south"
+        ],
+        "type": [
+          "all_directions",
+          "one_way"
+        ]
+      }
+    },
+    "road_surface": [
+      "smooth",
+      "bumpy",
+      "rough"
+    ],
+    "traffic_controls": [
+      "lane divider",
+      "stop sign",
+      "yield sign"
+    ],
+    "additional_properties": {}
+  },
+  "events": [
+    {
+      "trigger": {
+        "actor": "integer",
+        "action": [
+          "contacted",
+          "hit",
+          "ran into"
+        ],
+        "second_actor": "integer",
+        "chain_reaction": [
+          {
+            "event": {
+              "actor": "integer",
+              "actor_2": "integer",
+              "collision_type": [
+                "rear_end",
+                "front_end",
+                "side_sweep"
+              ],
+              "result": {
+                "vehicle_2": "pushed forward",
+                "vehicle_3": "at rest"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "last_updated": "date"
+  }
+}
