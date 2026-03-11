@@ -1,0 +1,83 @@
+{
+    "road_network": {
+        "name": "5-lane undivided roadway",
+        "lanes": [
+            {
+                "id": 1,
+                "direction": "south",
+                "vehicles": []
+            },
+            {
+                "id": 2,
+                "direction": "south",
+                "vehicles": []
+            },
+            {
+                "id": 3,
+                "direction": "south",
+                "vehicles": [
+                    {
+                        "id": "V2",
+                        "vehicle": "1986 Dodge Ram pickup"
+                    }
+                ]
+            },
+            {
+                "id": 4,
+                "direction": "north",
+                "vehicles": []
+            },
+            {
+                "id": 5,
+                "direction": "north",
+                "vehicles": []
+            }
+        ]
+    },
+    "actors": [
+        {
+            "id": "V1",
+            "vehicle": "1995 Buick LeSabre",
+            "pre_crash_state": {
+                "speed": null,
+                "lane_id": 2,
+                "position": null
+            }
+        },
+        {
+            "id": "V2",
+            "vehicle": "1986 Dodge Ram pickup",
+            "pre_crash_state": {
+                "speed": null,
+                "lane_id": 3,
+                "position": null
+            }
+        },
+        {
+            "id": "V3",
+            "vehicle": "1997 Saturn SL1",
+            "pre_crash_state": {
+                "speed": null,
+                "lane_id": 3,
+                "position": null
+            }
+        }
+    ],
+    "events": [
+        {
+            "actor_id": "V1",
+            "triggered_by": null,
+            "type": "collision",
+            "description": "V1 drifted into V2's lane and collided with the back of V2"
+        },
+        {
+            "actor_id": "V2",
+            "triggered_by": "V1",
+            "type": "chain reaction",
+            "description": "V2 was pushed into V3 by V1"
+        }
+    ],
+    "metadata": {
+        "last_updated": "2026-03-02T22:30:10.348824"
+    }
+}

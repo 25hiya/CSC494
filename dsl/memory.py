@@ -18,6 +18,10 @@ def load_previous_dsl(name: str):
 
 
 def save_new_version(name: str, dsl_dict: dict):
+    # At L0 the LLM may not include a metadata key — that's fine, just add it
+    if "metadata" not in dsl_dict:
+        dsl_dict["metadata"] = {}
     dsl_dict["metadata"]["last_updated"] = datetime.utcnow().isoformat()
+
     path = get_dsl_path(name)
     save_json(dsl_dict, path)

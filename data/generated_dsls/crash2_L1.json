@@ -1,0 +1,57 @@
+{
+    "crash_scenario": {
+        "road_network": {
+            "type": "undivided",
+            "lanes": 5,
+            "directions": [
+                "southbound",
+                "northbound"
+            ],
+            "surface_condition": "wet"
+        },
+        "actors": [
+            {
+                "vehicle": "1995 Buick LeSabre",
+                "driver_health_conditions": [
+                    "asthma"
+                ],
+                "sleep_duration": 4,
+                "medication_status": "off_medication",
+                "injuries": "minor",
+                "refused_medical_treatment": true
+            },
+            {
+                "vehicle": "1986 Dodge Ram pickup",
+                "prescription_lenses": "myopic"
+            },
+            {
+                "vehicle": "1997 Saturn SL1",
+                "prescription_lenses": "hyperopic"
+            }
+        ],
+        "environments": [
+            {
+                "time_of_day": "afternoon",
+                "day_of_week": "weekday"
+            }
+        ],
+        "events": [
+            {
+                "type": "collision",
+                "actor1": 0,
+                "actor2": 1,
+                "precrash_event": "another vehicle was stopped in his lane",
+                "critical_reason": "heart attack or other physical impairment of the ability to act"
+            },
+            {
+                "type": "rear-end collision",
+                "actor1": 0,
+                "actor2": 1,
+                "precrash_event": "another vehicle was in his lane, traveling in the same direction but at a higher speed"
+            }
+        ]
+    },
+    "metadata": {
+        "last_updated": "2026-03-02T20:45:09.236256"
+    }
+}

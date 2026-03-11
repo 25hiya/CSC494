@@ -14,11 +14,9 @@ from config import CRASH_REPORT_PATH
 def call_llm(chain, parser, inputs, max_retries=3):
     for attempt in range(max_retries):
         print(f"\nLLM attempt {attempt + 1}")
-
         result = chain.invoke(inputs)
         print("Raw output (first 500 chars):")
         print(result.content[:500])
-
         try:
             parsed = parser.parse(result.content)
             print("Parsing successful.")
@@ -26,43 +24,47 @@ def call_llm(chain, parser, inputs, max_retries=3):
         except Exception as e:
             print("Parsing failed:", e)
             print("Retrying...\n")
-
     raise RuntimeError("LLM failed to produce valid JSON after retries.")
 
 
-def generate_dsl(name: str, crash_report: str):
-    """Generate initial DSL with schema validation."""
-    parser = get_parser(validate=True)  # ← Validate for initial generation
+def generate_dsl(name: str, crash_report: str, domain_hints: str = ""):
+    """
+    Generate a DSL instance from a crash report.
+    domain_hints optionally injects domain knowledge — this is the core research variable.
+    """
+    parser = get_parser(validate=False)
     llm = get_llm()
-    prompt = get_initial_prompt(parser)
+    prompt = get_initial_prompt(domain_hints=domain_hints)
     chain = prompt | llm
+
+    if domain_hints:
+        print(f"🧠 Domain hints injected ({len(domain_hints)} chars)")
+    else:
+        print("⚙️  L0 — no hints, LLM decides everything")
 
     dsl_obj = call_llm(chain, parser, {"crash_report": crash_report})
-    
-    # Convert Pydantic model to dict
-    if hasattr(dsl_obj, 'model_dump'):
+    if hasattr(dsl_obj, "model_dump"):
         return dsl_obj.model_dump()
-    else:
-        return dsl_obj  # Already a dict
+    return dsl_obj
 
 
-def refine_dsl(name: str, hints: str, crash_report: str ):
-    """Refine DSL WITHOUT schema validation."""
+def refine_dsl(name: str, hints: str, crash_report: str):
+    """
+    Refine an existing DSL instance using correction hints.
+    Requires a previously generated DSL saved under --name.
+    """
     previous = load_previous_dsl(name)
-
     if previous is None:
-        raise ValueError("No previous DSL found. Generate first.")
+        raise ValueError("No previous DSL found. Run generate first.")
 
-    print(f"📝 Applying hints: {hints}")
-    print(f"⏳ This may take 1-3 minutes for complex refinements...")
-    print(f"⚠️  Schema validation DISABLED - structure can evolve freely\n", flush=True)
+    print(f"📝 Applying hints: {hints[:120]}...")
 
-    parser = get_parser(validate=False)  # ← NO validation for refinement!
+    parser = get_parser(validate=False)
     llm = get_llm()
-    prompt = get_refine_prompt(parser)
+    prompt = get_refine_prompt()
     chain = prompt | llm
 
-    dsl_dict = call_llm(
+    return call_llm(
         chain,
         parser,
         {
@@ -72,39 +74,48 @@ def refine_dsl(name: str, hints: str, crash_report: str ):
         },
     )
 
-    return dsl_dict  # Already a dict
-
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="DSL generation and refinement pipeline",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+USAGE:
+
+  # L0 — pure LLM, no domain hints
+  python main.py --mode generate --name crash1_L0 --crash_file report1.txt
+
+  # With domain hints
+  python main.py --mode generate --name crash1_L1 --crash_file report1.txt --hints "hint text"
+
+  # Refine an existing DSL instance
+  python main.py --mode refine --name crash1_L0 --crash_file report1.txt --hints "correction text"
+        """,
+    )
     parser.add_argument("--mode", choices=["generate", "refine"], required=True)
-    parser.add_argument("--name", type=str, required=True)
-    parser.add_argument("--crash_file", type=str)
-    parser.add_argument("--hints", type=str)
+    parser.add_argument("--name", type=str, required=True, help="Name for the DSL instance (used as filename)")
+    parser.add_argument("--crash_file", type=str, required=True, help="Crash report filename inside CRASH_REPORT_PATH")
+    parser.add_argument(
+        "--hints",
+        type=str,
+        default="",
+        help="Domain hints for generate mode, or correction hints for refine mode.",
+    )
 
     args = parser.parse_args()
+    crash_report = load_text(CRASH_REPORT_PATH + args.crash_file)
 
     if args.mode == "generate":
-        if not args.crash_file:
-            raise ValueError("Must provide --crash_file")
-
-        crash_report = load_text(CRASH_REPORT_PATH + args.crash_file)
-        dsl_dict = generate_dsl(args.name, crash_report)
+        dsl_dict = generate_dsl(args.name, crash_report, domain_hints=args.hints)
         save_new_version(args.name, dsl_dict)
-        print("\n✅ Initial DSL generated (with schema validation).")
+        print("\n✅ DSL instance generated.")
 
     elif args.mode == "refine":
         if not args.hints:
-            raise ValueError("Must provide --hints")
-        if not args.crash_file:
-            raise ValueError("Must provide --crash_file for refinement")
-
-        crash_report = load_text(CRASH_REPORT_PATH + args.crash_file)
-
+            raise ValueError("--hints is required for refine mode.")
         dsl_dict = refine_dsl(args.name, args.hints, crash_report)
-
         save_new_version(args.name, dsl_dict)
-        print("\n✅ DSL refined (schema-free evolution).")
+        print("\n✅ DSL instance refined.")
 
 
 if __name__ == "__main__":

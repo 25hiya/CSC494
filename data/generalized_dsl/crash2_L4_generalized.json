@@ -1,0 +1,87 @@
+{
+  "road_network": {
+    "geometry": {
+      "lanes": {
+        "type": "array",
+        "items": {
+          "id": {
+            "type": "integer"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "north",
+              "south"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "driving",
+              "turning"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "actors": {
+    "type": "object",
+    "additionalProperties": {
+      "id": {
+        "type": "string"
+      },
+      "vehicle": {
+        "make": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "strength": {
+          "type": "string"
+        },
+        "mass": {
+          "type": "string"
+        }
+      },
+      "pre_crash_state": {
+        "speed": {
+          "type": "string"
+        },
+        "lane_id": {
+          "type": "integer"
+        },
+        "position": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "events": {
+    "type": "array",
+    "items": {
+      "actor_id": {
+        "type": "string"
+      },
+      "triggered_by": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "collision",
+          "push"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "last_updated": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+    "crash_report": {
+        "vehicles": [
+            {
+                "make_model": "Buick LeSabre",
+                "year": 1995,
+                "lane": 2,
+                "direction": "southbound",
+                "injuries": "minor",
+                "refused_medical_treatment": true,
+                "critical_precrash_event": "another vehicle was stopped in his lane",
+                "critical_reason": "heart attack or other physical impairment of the ability to act",
+                "associated_factors": [
+                    "fatigue",
+                    "being in a hurry",
+                    "thinking about personal problems"
+                ]
+            },
+            {
+                "make_model": "Dodge Ram pickup",
+                "year": 1986,
+                "lane": 3,
+                "direction": "southbound",
+                "injuries": "none",
+                "critical_precrash_event": "another vehicle was in his lane, traveling in the same direction but at a higher speed"
+            },
+            {
+                "make_model": "Saturn SL1",
+                "year": 1997,
+                "lane": 3,
+                "direction": "southbound",
+                "injuries": "none",
+                "critical_precrash_event": null
+            }
+        ],
+        "roadway": {
+            "type": "undivided",
+            "lanes": 5,
+            "condition": "wet and level"
+        },
+        "time_of_day": "early afternoon hours",
+        "day_of_week": "weekday"
+    },
+    "metadata": {
+        "last_updated": "2026-03-02T19:51:37.017765"
+    }
+}

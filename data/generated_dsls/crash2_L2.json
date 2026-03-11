@@ -1,0 +1,63 @@
+{
+    "road_network": {
+        "type": "undivided",
+        "lanes": 5,
+        "directions": [
+            "southbound",
+            "northbound"
+        ]
+    },
+    "actors": [
+        {
+            "id": "V1",
+            "vehicle": {
+                "make": "Buick LeSabre",
+                "model_year": 1995
+            },
+            "position": "second lane of travel"
+        },
+        {
+            "id": "V2",
+            "vehicle": {
+                "make": "Dodge Ram",
+                "model_year": 1986
+            },
+            "position": "third lane (left hand turn lane)"
+        },
+        {
+            "id": "V3",
+            "vehicle": {
+                "make": "Saturn SL1",
+                "model_year": 1997
+            },
+            "position": "third lane (left hand turn lane)"
+        }
+    ],
+    "environments": [
+        {
+            "condition": "wet"
+        }
+    ],
+    "events": [
+        {
+            "actor_id": "V1",
+            "triggered_by": null,
+            "collision_type": "rear-end collision",
+            "affected_actors": [
+                "V2",
+                "V3"
+            ]
+        },
+        {
+            "actor_id": "V2",
+            "triggered_by": "V1",
+            "collision_type": "pushed into",
+            "affected_actors": [
+                "V3"
+            ]
+        }
+    ],
+    "metadata": {
+        "last_updated": "2026-03-02T22:18:47.251744"
+    }
+}

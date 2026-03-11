@@ -1,0 +1,100 @@
+{
+    "road_network": {
+        "lanes": [
+            {
+                "lane_number": 1,
+                "direction": "south",
+                "type": "driving"
+            },
+            {
+                "lane_number": 2,
+                "direction": "south",
+                "type": "driving"
+            },
+            {
+                "lane_number": 3,
+                "direction": "south",
+                "type": "turning"
+            },
+            {
+                "lane_number": 4,
+                "direction": "north",
+                "type": "driving"
+            },
+            {
+                "lane_number": 5,
+                "direction": "north",
+                "type": "driving"
+            }
+        ]
+    },
+    "actors": [
+        {
+            "id": "V1",
+            "vehicle_type": "passenger_car",
+            "mass_class": "medium",
+            "structural_strength": "medium",
+            "pre_crash_state": {
+                "lane_position": 2,
+                "speed": {
+                    "value": null,
+                    "description": "travelling"
+                }
+            }
+        },
+        {
+            "id": "V2",
+            "vehicle_type": "pickup_truck",
+            "mass_class": "heavy",
+            "structural_strength": "high",
+            "pre_crash_state": {
+                "lane_position": 3,
+                "speed": {
+                    "value": null,
+                    "description": "at rest"
+                }
+            }
+        },
+        {
+            "id": "V3",
+            "vehicle_type": "passenger_car",
+            "mass_class": "medium",
+            "structural_strength": "medium",
+            "pre_crash_state": {
+                "lane_position": 3,
+                "speed": {
+                    "value": null,
+                    "description": "at rest"
+                }
+            }
+        }
+    ],
+    "events": [
+        {
+            "trigger": "V1 drifted from lane 2 to lane 3",
+            "chain_reaction": [
+                {
+                    "actor_1": "V1",
+                    "actor_2": "V2",
+                    "collision_type": "rear-end",
+                    "outcome": {
+                        "V1": "drifted",
+                        "V2": "pushed"
+                    }
+                },
+                {
+                    "actor_1": "V2",
+                    "actor_2": "V3",
+                    "collision_type": "rear-end",
+                    "outcome": {
+                        "V2": "pushed",
+                        "V3": "struck"
+                    }
+                }
+            ]
+        }
+    ],
+    "metadata": {
+        "last_updated": "2026-03-03T01:08:21.381212"
+    }
+}

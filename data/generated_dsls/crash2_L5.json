@@ -1,0 +1,92 @@
+{
+    "road_network": {
+        "geometry": {
+            "lanes": [
+                {
+                    "id": 1,
+                    "direction": "south",
+                    "type": "driving"
+                },
+                {
+                    "id": 2,
+                    "direction": "north",
+                    "type": "driving"
+                },
+                {
+                    "id": 3,
+                    "direction": "south",
+                    "type": "turning"
+                },
+                {
+                    "id": 4,
+                    "direction": "north",
+                    "type": "turning"
+                }
+            ]
+        }
+    },
+    "actors": {
+        "V1": {
+            "id": "V1",
+            "vehicle": {
+                "make": "Buick",
+                "model": "LeSabre",
+                "strength": 1500,
+                "mass": 2500
+            },
+            "pre_crash_state": {
+                "speed": 60,
+                "lane_id": 2,
+                "position": 0.5
+            }
+        },
+        "V2": {
+            "id": "V2",
+            "vehicle": {
+                "make": "Dodge",
+                "model": "Ram",
+                "strength": 2000,
+                "mass": 3000
+            },
+            "pre_crash_state": {
+                "speed": 0,
+                "lane_id": 3,
+                "position": 1.0
+            }
+        },
+        "V3": {
+            "id": "V3",
+            "vehicle": {
+                "make": "Saturn",
+                "model": "SL1",
+                "strength": 1200,
+                "mass": 2200
+            },
+            "pre_crash_state": {
+                "speed": 0,
+                "lane_id": 3,
+                "position": 0.8
+            }
+        }
+    },
+    "events": [
+        {
+            "actor_id": "V1",
+            "triggered_by": null,
+            "type": "collision"
+        },
+        {
+            "actor_id": "V2",
+            "triggered_by": "V1",
+            "type": "push"
+        },
+        {
+            "actor_id": "V3",
+            "triggered_by": "V2",
+            "type": "push"
+        }
+    ],
+    "metadata": {
+        "last_updated": "2026-03-03T00:57:12.883277"
+    }
+}

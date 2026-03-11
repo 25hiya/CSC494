@@ -1,0 +1,167 @@
+# dsl/schema_merger.py
+#
+# The generalized DSL should NEVER be manually refined per crash.
+# Instead, it grows by merging new crash instances into a corpus schema.
+#
+# Merging rules:
+#   - scalar value  + same scalar  → keep as-is
+#   - scalar value  + new scalar   → promote to list of options
+#   - existing list + new scalar   → add to list if not present
+#   - existing list + list         → union of both lists
+#   - "number" / "integer"         → stays as type annotation (no merging needed)
+#   - nested dict                  → recurse
+#   - list of objects (actors)     → merge by unioning all keys/values seen
+
+import json
+import os
+import copy
+from typing import Any
+
+
+TYPE_ANNOTATIONS = {"number", "integer", "date", "string", "boolean"}
+
+
+def _is_type_annotation(value: Any) -> bool:
+    return isinstance(value, str) and value in TYPE_ANNOTATIONS
+
+
+def _merge_values(existing: Any, new_val: Any) -> Any:
+    """Merge two values according to generalization rules."""
+
+    # Both are type annotations → keep existing
+    if _is_type_annotation(existing) and _is_type_annotation(new_val):
+        return existing  # same semantics
+
+    # Existing is type annotation → it already covers any scalar
+    if _is_type_annotation(existing):
+        return existing
+
+    # New value is type annotation → promote existing to annotation
+    if _is_type_annotation(new_val):
+        return new_val
+
+    # Both are dicts → recurse
+    if isinstance(existing, dict) and isinstance(new_val, dict):
+        return _merge_dicts(existing, new_val)
+
+    # Both are lists → union
+    if isinstance(existing, list) and isinstance(new_val, list):
+        merged = list(existing)
+        for item in new_val:
+            if item not in merged:
+                merged.append(item)
+        return merged
+
+    # Existing is list, new is scalar → add to list
+    if isinstance(existing, list) and not isinstance(new_val, (list, dict)):
+        if new_val not in existing:
+            return existing + [new_val]
+        return existing
+
+    # Existing is scalar, new is list → promote existing into list then union
+    if not isinstance(existing, (list, dict)) and isinstance(new_val, list):
+        base = [existing] if existing not in new_val else []
+        merged = base + new_val
+        return merged
+
+    # Both are scalars
+    if existing == new_val:
+        return existing
+
+    # Different scalars → promote to list of options
+    if not isinstance(existing, (list, dict)) and not isinstance(new_val, (list, dict)):
+        return [existing, new_val]
+
+    # Fallback: keep existing
+    return existing
+
+
+def _merge_dicts(base: dict, new: dict) -> dict:
+    """Deep merge two dicts using generalization rules."""
+    result = copy.deepcopy(base)
+
+    for key, new_val in new.items():
+        if key not in result:
+            # New key introduced by this crash - add it
+            result[key] = new_val
+        else:
+            result[key] = _merge_values(result[key], new_val)
+
+    return result
+
+
+def _instance_to_generalized(instance: Any) -> Any:
+    """
+    Convert a raw DSL instance value into its generalized form.
+    Scalars stay as scalars (they'll be promoted to lists on merge).
+    Dicts recurse. Lists of objects get their entries merged together.
+    """
+    if isinstance(instance, dict):
+        return {k: _instance_to_generalized(v) for k, v in instance.items()}
+
+    if isinstance(instance, list):
+        if not instance:
+            return []
+        # List of dicts → merge all entries into one representative object
+        if all(isinstance(item, dict) for item in instance):
+            merged = {}
+            for item in instance:
+                merged = _merge_dicts(merged, _instance_to_generalized(item))
+            return [merged]
+        # List of scalars → already a set of options
+        return list(set(instance))  # deduplicate
+
+    # Scalar
+    return instance
+
+
+def generalize_instance(instance: dict) -> dict:
+    """Turn a single DSL instance into a generalized schema."""
+    return _instance_to_generalized(instance)
+
+
+def merge_into_corpus(corpus: dict | None, new_instance: dict) -> dict:
+    """
+    Merge a new DSL instance into the growing corpus generalized schema.
+
+    Args:
+        corpus:       Existing generalized schema (None if first crash)
+        new_instance: Raw DSL instance from a new crash
+
+    Returns:
+        Updated generalized schema
+    """
+    generalized_new = generalize_instance(new_instance)
+
+    if corpus is None:
+        return generalized_new
+
+    return _merge_dicts(corpus, generalized_new)
+
+
+# ── CLI helper ────────────────────────────────────────────────────────────────
+
+def build_corpus_from_instances(instance_paths: list[str], output_path: str):
+    """
+    Build a generalized corpus schema from a list of DSL instance JSON files.
+
+    Usage:
+        build_corpus_from_instances(
+            ["data/generated_dsls/crash1.json", "data/generated_dsls/crash2.json"],
+            "data/generalized_dsl/corpus.json"
+        )
+    """
+    corpus = None
+
+    for path in instance_paths:
+        print(f"  Merging: {path}")
+        with open(path) as f:
+            instance = json.load(f)
+        corpus = merge_into_corpus(corpus, instance)
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(corpus, f, indent=2)
+
+    print(f"\n✅ Corpus schema saved to: {output_path}")
+    return corpus
