@@ -1,0 +1,48 @@
+{
+  "crash_name": "CRASH_NAME",
+  "crash_file": "CRASH_FILE.txt",
+  "levels": [
+    {
+      "level": "L0",
+      "mode": "generate",
+      "hints": "",
+      "_notes": "No hints. Pure LLM output. Baseline — LLM decides all structure and keys."
+    },
+    {
+      "level": "L1",
+      "mode": "generate",
+      "hints": "You are a road network architecture expert and want to generate a crash scenario from the given crash report. Ensure to have a key for road_network, actors, environments and events (represents the collision between different actors involved in the crash)",
+      "_notes": "Introduces the four required top-level keys: road_network, actors, environments, events. No further constraints on structure within those keys."
+    },
+    {
+      "level": "L2",
+      "mode": "generate",
+      "hints": "You are a road network architecture expert and want to generate a crash scenario from the given crash report. Ensure to have a key for road_network, actors, environments and events (represents the collision between different actors involved in the crash). Actors are physical entities in the crash, each has a unique id, and abstract info about the vehicle. Do not include health information from the crash report.",
+      "_notes": "Adds: actors must have unique IDs and abstract vehicle info. Removes: driver health info. Still no lane IDs, no pre-crash state, flat event structure."
+    },
+    {
+      "level": "L3",
+      "mode": "generate",
+      "hints": "You are a road network architecture expert and want to generate a crash scenario from the given crash report. Ensure to have a key for road_network, actors, environments and events (represents the collision between different actors involved in the crash). Actors are physical entities in the crash, each has a unique id, and abstract info about the vehicle. Do not include health information from the crash report. Events represent a causal sequence — one actor triggers the crash and any downstream collisions are chain reactions from that trigger.",
+      "_notes": "Adds: causal event structure with trigger and chain reactions. Actors now get actor_id and triggered_by fields. Still missing: lane IDs, pre-crash state, structured position."
+    },
+    {
+      "level": "L4",
+      "mode": "generate",
+      "hints": "You are a road network architecture expert and want to generate a crash scenario from the given crash report. Ensure to have a key for road_network, actors, environments and events (represents the collision between different actors involved in the crash). Actors are physical entities in the crash, each has a unique id, and abstract info about the vehicle. Do not include health information from the crash report. Events represent a causal sequence — one actor triggers the crash and any downstream collisions are chain reactions from that trigger. Each actor has a structured pre-crash state describing their speed and lane id they are in and position within the lane.",
+      "_notes": "Adds: structured pre-crash state per actor (speed, lane_id, position). Side effect: vehicles may get embedded inside lanes — structural conflict where actor location bleeds into road_network."
+    },
+    {
+      "level": "L5",
+      "mode": "generate",
+      "hints": "You are a road network architecture expert and want to generate a crash scenario from the given crash report. Ensure to have a key for road_network, actors, environments and events (represents the collision between different actors involved in the crash). Actors are physical entities in the crash, each has a unique id, and abstract info about the vehicle. Do not include health information from the crash report. Events represent a causal sequence — one actor triggers the crash and any downstream collisions are chain reactions from that trigger. Each actor has a structured pre-crash state describing their speed and lane id they are in and position within the lane. Road network describes the geometry only — actors belong in the actors key, not inside lanes. For each actor, based on the make and model add a key for the structural strength and mass as derived features.",
+      "_notes": "Adds: road_network is geometry only (fixes structural conflict from L4). Adds derived features (mass, structural_strength) per actor. Known issues: speed and derived feature values are hallucinated integers — not in crash report."
+    },
+    {
+      "level": "L6",
+      "mode": "generate",
+      "hints": "You are a road network architecture expert and want to generate a crash scenario from the given crash report. Ensure to have a key for road_network, actors, environments and events (represents the collision between different actors involved in the crash). Actors are physical entities in the crash, each has a unique id, and abstract info about the vehicle. Do not include health information from the crash report. Events represent a causal sequence — one actor triggers the crash and any downstream collisions are chain reactions from that trigger. Each actor has a structured pre-crash state describing their speed and lane id they are in and position within the lane. Road network describes the geometry only — actors belong in the actors key, not inside lanes. For each actor, based on the make and model add a key for the structural strength and mass as derived features. Use string categories for derived features: mass should be one of light, medium, or heavy; structural_strength should be one of low, medium, or high. If a numeric value such as speed is not explicitly stated in the crash report, set it to null — do not guess or estimate. Represent lanes as an array of lane objects each with a lane_number, direction, and type (driving or turning). Events must have a trigger field (string) and a chain_reaction field (array of collision steps each with actor_1, actor_2, collision_type, and outcome).",
+      "_notes": "Adds: fixes hallucinated numerics by requiring null for unknown values. Fixes derived features to use string categories not integers. Fully specifies lane object structure and event structure. This is the gold standard level."
+    }
+  ]
+}

@@ -1,0 +1,179 @@
+# llm/auto_refine.py
+#
+# Automated refinement loop:
+#   1. LLM critiques the current DSL instance against the crash report
+#   2. Critique is turned into structured hints
+#   3. Hints drive the existing refine_dsl() pipeline
+#   4. Loop until LLM reports no issues or max_rounds reached
+#
+# This replaces the need for a human to type --hints manually.
+
+import json
+import re
+from langchain_core.prompts import PromptTemplate
+from llm.client import get_llm
+
+
+# ── Prompt: ask the LLM to critique an instance ──────────────────────────────
+
+CRITIQUE_PROMPT = """
+You are a domain expert reviewing a DSL instance generated from a crash report.
+
+Crash Report (authoritative source of truth):
+{crash_report}
+
+Current DSL Instance:
+{dsl_instance}
+
+Your job:
+1. Check every field in the DSL instance against the crash report.
+2. Identify any factual errors, missing data, or structural problems.
+3. If the DSL instance is accurate and complete, output exactly: NO_ISSUES
+
+If there ARE issues, output a JSON object with this structure:
+{{
+  "issues": [
+    {{
+      "field": "<dot-path to the field, e.g. actors[1].state.speed>",
+      "problem": "<what is wrong>",
+      "fix": "<what it should be, grounded in the crash report>"
+    }}
+  ]
+}}
+
+STRICT RULES:
+- Only flag real discrepancies with the crash report.
+- Do NOT invent improvements not supported by the crash report.
+- Output ONLY the JSON object or NO_ISSUES. No explanations.
+- Wrap JSON in triple backticks.
+"""
+
+
+# ── Prompt: convert issues list into refinement hints ────────────────────────
+
+HINTS_FROM_ISSUES_PROMPT = """
+Convert the following list of DSL issues into a single, concise refinement hint string
+that a domain expert would write. Be specific about field names and correct values.
+
+Issues:
+{issues_json}
+
+Output a single plain-text paragraph of instructions. No JSON. No bullet points.
+"""
+
+
+def _extract_json_or_keyword(text: str):
+    """Return parsed dict from LLM critique output, or None if NO_ISSUES."""
+    if "NO_ISSUES" in text:
+        return None
+
+    # Try code block first
+    m = re.search(r"```[^\n]*\n(.*?)\n```", text, re.DOTALL)
+    if m:
+        return json.loads(m.group(1))
+
+    # Fallback: raw JSON
+    m = re.search(r'\{.*\}', text, re.DOTALL)
+    if m:
+        return json.loads(m.group(0))
+
+    return None  # Treat unparseable output as no issues
+
+
+def _build_hints_from_issues(issues: list) -> str:
+    """Ask the LLM to turn structured issues into a human-readable hint string."""
+    llm = get_llm()
+    prompt = PromptTemplate(
+        template=HINTS_FROM_ISSUES_PROMPT,
+        input_variables=["issues_json"],
+    )
+    chain = prompt | llm
+    result = chain.invoke({"issues_json": json.dumps(issues, indent=2)})
+    return result.content.strip()
+
+
+def critique_instance(crash_report: str, dsl_instance: dict) -> list | None:
+    """
+    Ask the LLM to review the DSL instance.
+
+    Returns:
+        List of issue dicts if problems found.
+        None if the instance looks correct.
+    """
+    llm = get_llm()
+    prompt = PromptTemplate(
+        template=CRITIQUE_PROMPT,
+        input_variables=["crash_report", "dsl_instance"],
+    )
+    chain = prompt | llm
+
+    result = chain.invoke({
+        "crash_report": crash_report,
+        "dsl_instance": json.dumps(dsl_instance, indent=2),
+    })
+
+    print("Critique output (first 400 chars):")
+    print(result.content[:400])
+
+    parsed = _extract_json_or_keyword(result.content)
+    if parsed is None:
+        return None  # No issues detected
+    return parsed.get("issues", [])
+
+
+def auto_refine_instance(
+    name: str,
+    crash_report: str,
+    max_rounds: int = 3,
+) -> dict:
+    """
+    Automatically refine a DSL instance until the LLM is satisfied or
+    max_rounds is reached.
+
+    Args:
+        name:         DSL name (used to load/save via memory.py)
+        crash_report: Raw crash report text
+        max_rounds:   Maximum critique-refine cycles
+
+    Returns:
+        Final refined DSL instance dict
+    """
+    # Import here to avoid circular imports at module level
+    from dsl.memory import load_previous_dsl, save_new_version
+    from main import refine_dsl  # reuse existing refine pipeline
+
+    current = load_previous_dsl(name)
+    if current is None:
+        raise ValueError(f"No existing DSL instance found for '{name}'. Run generate first.")
+
+    print(f"\n{'='*60}")
+    print(f"Starting auto-refinement for '{name}' (max {max_rounds} rounds)")
+    print(f"{'='*60}\n")
+
+    for round_num in range(1, max_rounds + 1):
+        print(f"\n── Round {round_num}/{max_rounds} ──────────────────────────────")
+
+        issues = critique_instance(crash_report, current)
+
+        if not issues:
+            print(f"✅ No issues found. Instance is consistent with crash report.")
+            break
+
+        print(f"🔍 Found {len(issues)} issue(s):")
+        for i, issue in enumerate(issues, 1):
+            print(f"  {i}. [{issue.get('field', '?')}] {issue.get('problem', '')}")
+            print(f"     Fix: {issue.get('fix', '')}")
+
+        # Convert structured issues to a hint string
+        hints = _build_hints_from_issues(issues)
+        print(f"\n📝 Auto-generated hints:\n{hints}\n")
+
+        # Run the existing refine pipeline with auto-generated hints
+        current = refine_dsl(name, hints, crash_report)
+        save_new_version(name, current)
+        print(f"💾 Round {round_num} refinement saved.")
+
+    else:
+        print(f"\n⚠️  Reached max rounds ({max_rounds}). Saving best result.")
+
+    return current
